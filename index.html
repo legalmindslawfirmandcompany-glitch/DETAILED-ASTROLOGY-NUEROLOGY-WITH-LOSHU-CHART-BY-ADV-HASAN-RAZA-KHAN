@@ -1,208 +1,501 @@
-import React, { useState, useEffect } from 'react';
-import { RefreshCcw, Star, Sun, Moon, Sparkles, User, Users, Clipboard, Volume2, Palette, ChevronDown } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numerology & Astrology Nexus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .card { @apply p-6 rounded-2xl shadow-lg border border-gray-700 transition-colors duration-300; }
+        .dark .card { @apply bg-gray-800 border-gray-700; }
+        .light .card { @apply bg-white border-gray-300; }
+        .input-group { @apply mb-4; }
+        .input-field { @apply w-full px-4 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-300; }
+        .dark .input-field { @apply bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400; }
+        .light .input-field { @apply bg-gray-200 border-gray-300 text-gray-800 placeholder-gray-500; }
+        .btn { @apply font-semibold py-2 px-4 rounded-full shadow-md transition-transform duration-200 active:scale-95; }
+        .btn-primary { @apply bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700; }
+        .btn-secondary { @apply bg-gray-600 text-white hover:bg-gray-700; }
+        .dark .btn-secondary { @apply bg-gray-600 text-white hover:bg-gray-700; }
+        .light .btn-secondary { @apply bg-gray-300 text-gray-800 hover:bg-gray-400; }
+        .prose-sm pre { @apply bg-gray-600 text-gray-100 p-2 rounded-md whitespace-pre-wrap; }
+        .light .prose-sm pre { @apply bg-gray-200 text-gray-800; }
+    </style>
+</head>
+<body class="min-h-screen font-['Inter'] transition-colors duration-500 bg-gray-900 text-gray-200">
 
-// --- Numerology Mappings and Definitions ---
-const MAPPINGS = {
-  "Pythagorean": {
-    'A': 1, 'J': 1, 'S': 1, 'B': 2, 'K': 2, 'T': 2, 'C': 3, 'L': 3, 'U': 3,
-    'D': 4, 'M': 4, 'V': 4, 'E': 5, 'N': 5, 'W': 5, 'F': 6, 'O': 6, 'X': 6,
-    'G': 7, 'P': 7, 'Y': 7, 'H': 8, 'Q': 8, 'Z': 8, 'I': 9, 'R': 9
-  },
-  "Chaldean": {
-    'A': 1, 'I': 1, 'J': 1, 'Q': 1, 'Y': 1, 'B': 2, 'K': 2, 'R': 2, 'C': 3, 'G': 3, 'L': 3,
-    'S': 3, 'D': 4, 'M': 4, 'T': 4, 'E': 5, 'H': 5, 'N': 5, 'X': 5, 'U': 6, 'V': 6, 'W': 6,
-    'O': 7, 'Z': 7, 'F': 8, 'P': 8
-  },
-  "Cheiro": {
-    'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 8, 'G': 3, 'H': 5, 'I': 1, 'J': 1,
-    'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 7, 'P': 8, 'Q': 1, 'R': 2, 'S': 3,
-    'T': 4, 'U': 6, 'V': 6, 'W': 6, 'X': 5, 'Y': 1, 'Z': 7
-  },
-  "Kabbalistic": {
-    'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 'J': 1,
-    'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 6, 'P': 7, 'Q': 8, 'R': 9, 'S': 1,
-    'T': 2, 'U': 3, 'V': 4, 'W': 5, 'X': 6, 'Y': 7, 'Z': 8
-  },
-  "Islamic (Abjad)": {
-    // Abjad mapping for English alphabet based on common transliterations
-    'A': 1, 'B': 2, 'C': 20, 'D': 4, 'E': 5, 'F': 80, 'G': 3, 'H': 5, 'I': 10,
-    'J': 3, 'K': 20, 'L': 30, 'M': 40, 'N': 50, 'O': 70, 'P': 80, 'Q': 100,
-    'R': 200, 'S': 60, 'T': 400, 'U': 6, 'V': 6, 'W': 6, 'X': 10, 'Y': 10, 'Z': 700
-  },
-  "Tamil (Vedic)": {
-    // Simplified Tamil numerology for English alphabet.
-    // This is a rough transliteration and not a direct replacement for the Tamil script.
-    'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 'J': 1,
-    'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 6, 'P': 7, 'Q': 8, 'R': 9, 'S': 1,
-    'T': 2, 'U': 3, 'V': 4, 'W': 5, 'X': 6, 'Y': 7, 'Z': 8
-  },
-  "Vowels": ['A', 'E', 'I', 'O', 'U'],
-  "Consonants": ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'],
-};
+<div class="max-w-7xl mx-auto p-4 sm:p-8">
+    <header class="text-center mb-12">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600 mb-2">
+            Numerology & Astrology Nexus
+        </h1>
+        <p class="text-lg text-gray-400">
+            Simultaneously calculate and compare your life path and cosmic identity.
+        </p>
+    </header>
 
-const NUMBER_MEANINGS = {
-  1: "Individuality, leadership, new beginnings, independence, and pioneering spirit.",
-  2: "Balance, partnership, cooperation, diplomacy, and intuition.",
-  3: "Creativity, self-expression, communication, and social interaction.",
-  4: "Stability, foundation, practicality, hard work, and discipline.",
-  5: "Freedom, change, adventure, versatility, and adaptability.",
-  6: "Harmony, family, responsibility, nurturing, and service.",
-  7: "Spirituality, analysis, inner wisdom, introspection, and perfectionism.",
-  8: "Abundance, power, authority, success, and material mastery.",
-  9: "Humanitarianism, compassion, completion, and universal love."
-};
-const MASTER_NUMBERS = new Set([11, 22, 33, 44, 55, 66, 77, 88, 99]);
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Panel: Inputs & Controls -->
+        <div class="lg:col-span-1 space-y-6">
+            <div id="person1-card" class="card">
+                <h2 class="text-xl font-bold mb-4 text-purple-300">Person 1</h2>
+                <div class="input-group">
+                    <label class="block mb-1">Name:</label>
+                    <input type="text" id="name1" placeholder="Enter Full Name" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label class="block mb-1">Date of Birth:</label>
+                    <input type="text" id="dob1" placeholder="DD/MM/YYYY or DD-MM-YYYY" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label class="block mb-1">Time of Birth:</label>
+                    <input type="text" id="tob1" placeholder="HH:MM (optional)" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label class="block mb-1">Location of Birth:</label>
+                    <input type="text" id="location1" placeholder="City, Country (optional)" class="input-field">
+                </div>
+            </div>
 
-// --- Astrology Data (Zodiac Basics) ---
-const ZODIAC_BASICS = {
-  "Aries": { luckyNumber: 9, luckyColor: 'Red', element: 'Fire', birthstone: 'Diamond', planet: 'Mars', luckyDay: 'Tuesday' },
-  "Taurus": { luckyNumber: 6, luckyColor: 'Green', element: 'Earth', birthstone: 'Emerald', planet: 'Venus', luckyDay: 'Friday' },
-  "Gemini": { luckyNumber: 5, luckyColor: 'Yellow', element: 'Air', birthstone: 'Agate', planet: 'Mercury', luckyDay: 'Wednesday' },
-  "Cancer": { luckyNumber: 2, luckyColor: 'White', element: 'Water', birthstone: 'Pearl', planet: 'Moon', luckyDay: 'Monday' },
-  "Leo": { luckyNumber: 1, luckyColor: 'Gold', element: 'Fire', birthstone: 'Peridot', planet: 'Sun', luckyDay: 'Sunday' },
-  "Virgo": { luckyNumber: 5, luckyColor: 'Gray', element: 'Earth', birthstone: 'Sapphire', planet: 'Mercury', luckyDay: 'Wednesday' },
-  "Libra": { luckyNumber: 6, luckyColor: 'Pink', element: 'Air', birthstone: 'Opal', planet: 'Venus', luckyDay: 'Friday' },
-  "Scorpio": { luckyNumber: 9, luckyColor: 'Black', element: 'Water', birthstone: 'Topaz', planet: 'Pluto', luckyDay: 'Tuesday' },
-  "Sagittarius": { luckyNumber: 3, luckyColor: 'Purple', element: 'Fire', birthstone: 'Turquoise', planet: 'Jupiter', luckyDay: 'Thursday' },
-  "Capricorn": { luckyNumber: 8, luckyColor: 'Brown', element: 'Earth', birthstone: 'Garnet', planet: 'Saturn', luckyDay: 'Saturday' },
-  "Aquarius": { luckyNumber: 4, luckyColor: 'Blue', element: 'Air', birthstone: 'Amethyst', planet: 'Uranus', luckyDay: 'Saturday' },
-  "Pisces": { luckyNumber: 7, luckyColor: 'Sea Green', element: 'Water', birthstone: 'Aquamarine', planet: 'Neptune', luckyDay: 'Thursday' },
-};
+            <div id="person2-card" class="card">
+                <h2 class="text-xl font-bold mb-4 text-purple-300">Person 2</h2>
+                <div class="input-group">
+                    <label class="block mb-1">Name:</label>
+                    <input type="text" id="name2" placeholder="Enter Full Name (Optional)" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label class="block mb-1">Date of Birth:</label>
+                    <input type="text" id="dob2" placeholder="DD/MM/YYYY or DD-MM-YYYY (Optional)" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label class="block mb-1">Time of Birth:</label>
+                    <input type="text" id="tob2" placeholder="HH:MM (optional)" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label class="block mb-1">Location of Birth:</label>
+                    <input type="text" id="location2" placeholder="City, Country (optional)" class="input-field">
+                </div>
+            </div>
 
-/**
- * Gets the Zodiac Sign based on the date of birth.
- * @param {string} dob - Date of birth in DD/MM/YYYY or DD-MM-YYYY format.
- * @returns {string|null} The Zodiac sign or null if invalid date.
- */
-const getZodiacSign = (dob) => {
-  const normalizedDob = dob.replace(/-/g, '/');
-  const [day, month] = normalizedDob.split('/').map(Number);
-  if (isNaN(day) || isNaN(month) || month < 1 || month > 12) {
-    return null;
-  }
-  
-  if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return "Aquarius";
-  if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return "Pisces";
-  if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return "Aries";
-  if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return "Taurus";
-  if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return "Gemini";
-  if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return "Cancer";
-  if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return "Leo";
-  if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return "Virgo";
-  if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return "Libra";
-  if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return "Scorpio";
-  if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return "Sagittarius";
-  if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return "Capricorn";
-  
-  return null;
-};
+            <div id="methods-card" class="card">
+                <h2 class="text-xl font-bold mb-4">Select Numerology Methodologies</h2>
+                <div class="space-y-2" id="methodology-checkboxes"></div>
+            </div>
 
-/**
- * Generates the basic zodiac details section in Markdown.
- * @param {string} zodiacSign - The person's zodiac sign.
- * @returns {string} The formatted Markdown string.
- */
-const generateZodiacBasics = (zodiacSign) => {
-  const basics = ZODIAC_BASICS[zodiacSign];
-  if (!basics) return '';
+            <div class="card space-y-4">
+                <h2 class="text-xl font-bold">Actions</h2>
+                <button id="analyze-btn" class="w-full btn btn-primary flex items-center justify-center space-x-2">
+                    <span id="analyze-icon"></span>
+                    <span id="analyze-text">Analyze & Compare</span>
+                </button>
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="speak-btn" class="btn btn-secondary flex items-center justify-center space-x-2">
+                        <span id="speak-icon"></span>
+                        <span id="speak-text">Speak</span>
+                    </button>
+                    <button id="copy-btn" class="btn btn-secondary flex items-center justify-center space-x-2">
+                        <span id="copy-icon"></span>
+                        <span>Copy</span>
+                    </button>
+                </div>
+                <button id="theme-btn" class="btn btn-secondary w-full">
+                    <span id="theme-icon"></span>
+                    <span>Toggle Theme</span>
+                </button>
+            </div>
+            <div id="error-message" class="text-red-500 mt-4 text-center"></div>
+        </div>
 
-  return `### Zodiac Basic Information
----
-Your Zodiac Sign is: **${zodiacSign}**
-* Lucky Number: **${basics.luckyNumber}**
-* Lucky Color: **${basics.luckyColor}**
-* Favorable Element: **${basics.element}**
-* Birthstone: **${basics.birthstone}**
-* Ruling Planet: **${basics.planet}**
-* Lucky Day: **${basics.luckyDay}**
-`;
-};
+        <!-- Right Panel: Results -->
+        <div id="results-panel" class="lg:col-span-2">
+            <div class="flex items-center justify-center p-8 border-4 border-dashed rounded-2xl border-gray-700 h-96">
+                <p class="text-center text-gray-400">Your comprehensive report will appear here after analysis.</p>
+            </div>
+        </div>
+    </main>
+</div>
 
-// --- Numerology Calculation Functions ---
-const reduceNumber = (num) => {
-  if (MASTER_NUMBERS.has(num)) {
-    return num;
-  }
-  let sum = num;
-  while (sum > 9 && !MASTER_NUMBERS.has(sum)) {
-    sum = String(sum).split('').reduce((acc, digit) => acc + parseInt(digit, 10), 0);
-  }
-  return sum;
-};
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Numerology Mappings and Definitions ---
+        const MAPPINGS = {
+            "Pythagorean": {
+                'A': 1, 'J': 1, 'S': 1, 'B': 2, 'K': 2, 'T': 2, 'C': 3, 'L': 3, 'U': 3,
+                'D': 4, 'M': 4, 'V': 4, 'E': 5, 'N': 5, 'W': 5, 'F': 6, 'O': 6, 'X': 6,
+                'G': 7, 'P': 7, 'Y': 7, 'H': 8, 'Q': 8, 'Z': 8, 'I': 9, 'R': 9
+            },
+            "Chaldean": {
+                'A': 1, 'I': 1, 'J': 1, 'Q': 1, 'Y': 1, 'B': 2, 'K': 2, 'R': 2, 'C': 3, 'G': 3, 'L': 3,
+                'S': 3, 'D': 4, 'M': 4, 'T': 4, 'E': 5, 'H': 5, 'N': 5, 'X': 5, 'U': 6, 'V': 6, 'W': 6,
+                'O': 7, 'Z': 7, 'F': 8, 'P': 8
+            },
+            "Cheiro": {
+                'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 8, 'G': 3, 'H': 5, 'I': 1, 'J': 1,
+                'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 7, 'P': 8, 'Q': 1, 'R': 2, 'S': 3,
+                'T': 4, 'U': 6, 'V': 6, 'W': 6, 'X': 5, 'Y': 1, 'Z': 7
+            },
+            "Kabbalistic": {
+                'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 'J': 1,
+                'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 6, 'P': 7, 'Q': 8, 'R': 9, 'S': 1,
+                'T': 2, 'U': 3, 'V': 4, 'W': 5, 'X': 6, 'Y': 7, 'Z': 8
+            },
+            "Islamic (Abjad)": {
+                'A': 1, 'B': 2, 'C': 20, 'D': 4, 'E': 5, 'F': 80, 'G': 3, 'H': 5, 'I': 10,
+                'J': 3, 'K': 20, 'L': 30, 'M': 40, 'N': 50, 'O': 70, 'P': 80, 'Q': 100,
+                'R': 200, 'S': 60, 'T': 400, 'U': 6, 'V': 6, 'W': 6, 'X': 10, 'Y': 10, 'Z': 700
+            },
+            "Tamil (Vedic)": {
+                'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 'J': 1,
+                'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 6, 'P': 7, 'Q': 8, 'R': 9, 'S': 1,
+                'T': 2, 'U': 3, 'V': 4, 'W': 5, 'X': 6, 'Y': 7, 'Z': 8
+            },
+            "Vowels": ['A', 'E', 'I', 'O', 'U'],
+            "Consonants": ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'],
+        };
+        const MASTER_NUMBERS = new Set([11, 22, 33, 44, 55, 66, 77, 88, 99]);
 
-const getDestinyNumber = (name, methodology) => {
-  let total = 0;
-  const sanitizedName = name.replace(/[^a-zA-Z]/g, '').toUpperCase();
-  const detail = `Full Name letters and their values:\n${sanitizedName.split('').map(char => `${char}=${methodology[char] || 0}`).join(' + ')}`;
-  total = sanitizedName.split('').reduce((sum, char) => sum + (methodology[char] || 0), 0);
-  const finalNumber = reduceNumber(total);
-  return { value: finalNumber, detail: `${detail} = ${total}.\nReduction: ${total} -> ${finalNumber}.` };
-};
+        // --- Astrology Data (Zodiac Basics) ---
+        const ZODIAC_BASICS = {
+            "Aries": { luckyNumber: 9, luckyColor: 'Red', element: 'Fire', birthstone: 'Diamond', planet: 'Mars', luckyDay: 'Tuesday' },
+            "Taurus": { luckyNumber: 6, luckyColor: 'Green', element: 'Earth', birthstone: 'Emerald', planet: 'Venus', luckyDay: 'Friday' },
+            "Gemini": { luckyNumber: 5, luckyColor: 'Yellow', element: 'Air', birthstone: 'Agate', planet: 'Mercury', luckyDay: 'Wednesday' },
+            "Cancer": { luckyNumber: 2, luckyColor: 'White', element: 'Water', birthstone: 'Pearl', planet: 'Moon', luckyDay: 'Monday' },
+            "Leo": { luckyNumber: 1, luckyColor: 'Gold', element: 'Fire', birthstone: 'Peridot', planet: 'Sun', luckyDay: 'Sunday' },
+            "Virgo": { luckyNumber: 5, luckyColor: 'Gray', element: 'Earth', birthstone: 'Sapphire', planet: 'Mercury', luckyDay: 'Wednesday' },
+            "Libra": { luckyNumber: 6, luckyColor: 'Pink', element: 'Air', birthstone: 'Opal', planet: 'Venus', luckyDay: 'Friday' },
+            "Scorpio": { luckyNumber: 9, luckyColor: 'Black', element: 'Water', birthstone: 'Topaz', planet: 'Pluto', luckyDay: 'Tuesday' },
+            "Sagittarius": { luckyNumber: 3, luckyColor: 'Purple', element: 'Fire', birthstone: 'Turquoise', planet: 'Jupiter', luckyDay: 'Thursday' },
+            "Capricorn": { luckyNumber: 8, luckyColor: 'Brown', element: 'Earth', birthstone: 'Garnet', planet: 'Saturn', luckyDay: 'Saturday' },
+            "Aquarius": { luckyNumber: 4, luckyColor: 'Blue', element: 'Air', birthstone: 'Amethyst', planet: 'Uranus', luckyDay: 'Saturday' },
+            "Pisces": { luckyNumber: 7, luckyColor: 'Sea Green', element: 'Water', birthstone: 'Aquamarine', planet: 'Neptune', luckyDay: 'Thursday' },
+        };
 
-const getSoulUrgeNumber = (name, methodology) => {
-  let total = 0;
-  const sanitizedName = name.replace(/[^a-zA-Z]/g, '').toUpperCase();
-  const vowels = sanitizedName.split('').filter(char => MAPPINGS.Vowels.includes(char));
-  const detail = `Vowels and their values:\n${vowels.map(char => `${char}=${methodology[char] || 0}`).join(' + ')}`;
-  total = vowels.reduce((sum, char) => sum + (methodology[char] || 0), 0);
-  const finalNumber = reduceNumber(total);
-  return { value: finalNumber, detail: `${detail} = ${total}.\nReduction: ${total} -> ${finalNumber}.` };
-};
+        // --- DOM Elements ---
+        const name1Input = document.getElementById('name1');
+        const dob1Input = document.getElementById('dob1');
+        const tob1Input = document.getElementById('tob1');
+        const location1Input = document.getElementById('location1');
+        const name2Input = document.getElementById('name2');
+        const dob2Input = document.getElementById('dob2');
+        const tob2Input = document.getElementById('tob2');
+        const location2Input = document.getElementById('location2');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const speakBtn = document.getElementById('speak-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const themeBtn = document.getElementById('theme-btn');
+        const resultsPanel = document.getElementById('results-panel');
+        const errorMessage = document.getElementById('error-message');
+        const methodologyCheckboxesContainer = document.getElementById('methodology-checkboxes');
+        
+        // --- State ---
+        let selectedMethods = [];
+        let isDarkMode = true;
+        let lastCombinedReport = '';
+        const allMethods = Object.keys(MAPPINGS).filter(key => !['Vowels', 'Consonants'].includes(key));
+        
+        // --- Utility Functions ---
+        const setLoading = (isLoading) => {
+            analyzeBtn.disabled = isLoading;
+            const icon = document.getElementById('analyze-icon');
+            const text = document.getElementById('analyze-text');
+            if (isLoading) {
+                icon.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`;
+                text.textContent = 'Analyzing...';
+            } else {
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-ccw"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.79 2.91L3 8m0 0 4-4m-4 4 4 4"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.79-2.91L21 16m0 0-4 4m4-4-4-4"/></svg>`;
+                text.textContent = 'Analyze & Compare';
+            }
+        };
 
-const getPersonalityNumber = (name, methodology) => {
-  let total = 0;
-  const sanitizedName = name.replace(/[^a-zA-Z]/g, '').toUpperCase();
-  const consonants = sanitizedName.split('').filter(char => MAPPINGS.Consonants.includes(char));
-  const detail = `Consonants and their values:\n${consonants.map(char => `${char}=${methodology[char] || 0}`).join(' + ')}`;
-  total = consonants.reduce((sum, char) => sum + (methodology[char] || 0), 0);
-  const finalNumber = reduceNumber(total);
-  return { value: finalNumber, detail: `${detail} = ${total}.\nReduction: ${total} -> ${finalNumber}.` };
-};
+        const setTtsLoading = (isLoading) => {
+            speakBtn.disabled = isLoading;
+            const icon = document.getElementById('speak-icon');
+            const text = document.getElementById('speak-text');
+            if (isLoading) {
+                icon.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`;
+                text.textContent = 'Speaking...';
+            } else {
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume-2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
+                text.textContent = 'Speak';
+            }
+        };
 
-const getBirthdayNumber = (dob) => {
-  const normalizedDob = dob.replace(/-/g, '/');
-  const dobDay = parseInt(normalizedDob.split('/')[0], 10);
-  if (isNaN(dobDay)) {
-    return { value: 'N/A', detail: 'Invalid Date of Birth format.' };
-  }
-  const finalNumber = reduceNumber(dobDay);
-  const detail = `Day of birth is ${dobDay}.\nReduction: ${dobDay} -> ${finalNumber}`;
-  return { value: finalNumber, detail };
-};
+        const setErrorMessage = (msg) => {
+            errorMessage.textContent = msg;
+            setTimeout(() => errorMessage.textContent = '', 5000);
+        };
 
-const getLifePathNumber = (dob) => {
-  const normalizedDob = dob.replace(/-/g, '/');
-  const [day, month, year] = normalizedDob.split('/').map(Number);
-  const reducedYear = reduceNumber(year);
-  const reducedMonth = reduceNumber(month);
-  const reducedDay = reduceNumber(day);
-  const sum = reducedYear + reducedMonth + reducedDay;
-  const finalNumber = reduceNumber(sum);
-  const detail = `Year (${year}) -> ${reducedYear}\nMonth (${month}) -> ${reducedMonth}\nDay (${day}) -> ${reducedDay}\nSum: ${reducedYear} + ${reducedMonth} + ${reducedDay} = ${sum}.\nReduction: ${sum} -> ${finalNumber}.`;
-  return { value: finalNumber, detail };
-};
+        const getIconSvg = (name, className = "") => {
+            const icons = {
+                RefreshCcw: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-ccw"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.79 2.91L3 8m0 0 4-4m-4 4 4 4"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.79-2.91L21 16m0 0-4 4m4-4-4-4"/></svg>`,
+                Volume2: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume-2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`,
+                Clipboard: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`,
+                Palette: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-palette"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="17.5" cy="14.5" r=".5"/><circle cx="10.5" cy="10.5" r=".5"/><circle cx="8.5" cy="14.5" r=".5"/><path d="M12 2A10 10 0 0 0 5 20a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1 10 10 0 0 0-5-18"/><path d="M12 2v16"/><path d="M12 2H8.5a5.5 5.5 0 0 0-3 10.5"/><path d="M12 2h3.5a5.5 5.5 0 0 1 0 11"/></svg>`,
+                User: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+                Sparkles: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>`,
+                Star: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+                ChevronDown: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>`,
+            };
+            return icons[name] ? `<span class="${className}">${icons[name]}</span>` : '';
+        };
 
-const getLoShuChartNumbers = (dob, name, methodology) => {
-  let allDigits = [];
-  const dobDigits = dob.replace(/[\/\-]/g, '').split('').filter(d => d !== '0');
-  allDigits = allDigits.concat(dobDigits.map(Number));
-  if (name && methodology) {
-    const sanitizedName = name.replace(/[^a-zA-Z]/g, '').toUpperCase();
-    const nameNumbers = sanitizedName.split('').map(char => methodology[char] || 0).filter(n => n > 0);
-    allDigits = allDigits.concat(nameNumbers);
-  }
-  const grid = { '4': 0, '9': 0, '2': 0, '3': 0, '5': 0, '7': 0, '8': 0, '1': 0, '6': 0 };
-  allDigits.forEach(num => {
-    if (grid.hasOwnProperty(num.toString())) {
-      grid[num.toString()] += 1;
-    }
-  });
-  return grid;
-};
+        const renderLoShuChart = (gridData) => {
+            const order = [4, 9, 2, 3, 5, 7, 8, 1, 6];
+            let html = `<div class="lo-shu-grid grid grid-cols-3 gap-1 w-32 h-32 border-2 border-gray-500 my-2 rounded-lg">`;
+            order.forEach(num => {
+                const content = gridData[num] > 0 ? num.toString().repeat(gridData[num]) : '';
+                html += `<div class="lo-shu-cell bg-gray-700 flex items-center justify-center font-bold text-lg rounded-md dark:bg-gray-700 dark:text-gray-100 light:bg-gray-200 light:text-gray-800">${content}</div>`;
+            });
+            html += `</div>`;
+            return html;
+        };
+        
+        const renderPersonReport = (personName, report, personId) => {
+            if (!report) return '';
 
-// --- API Calls and Data Generation ---
-const getAstrologyReport = async ({ name, dob, tob, location }) => {
-  const prompt = `Act as a professional and expert astrologer. Generate a comprehensive and detailed natal chart analysis for a person. The report should be written in a warm, encouraging, and clear tone.
+            let html = `
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 dark:bg-gray-800 light:bg-white light:border-gray-300">
+                <h2 class="text-2xl font-bold mb-4 text-purple-300 dark:text-purple-300 light:text-purple-600 flex items-center">
+                    ${getIconSvg('User', 'mr-2')} ${personName}
+                </h2>
+                
+                <!-- Numerology Section -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold mb-4 border-b border-gray-600 pb-2 dark:border-gray-600 light:border-gray-300">Numerology</h3>
+                    <div class="space-y-4">
+                        <div class="bg-gray-700 p-4 rounded-xl flex items-center space-x-3 dark:bg-gray-700 light:bg-gray-100">
+                            ${getIconSvg('Sparkles', 'text-pink-400')}
+                            <div>
+                                <p class="text-sm text-gray-400 font-medium dark:text-gray-400 light:text-gray-500">Life Path Number</p>
+                                <p class="text-2xl font-extrabold text-pink-300 dark:text-pink-300 light:text-pink-600">${report.numerology.lifePath.value}</p>
+                                <details class="mt-2 text-sm text-gray-400 cursor-pointer">
+                                    <summary class="flex items-center text-gray-400">
+                                        ${getIconSvg('ChevronDown', 'mr-1 inline-block transition-transform duration-300 group-open:rotate-180')} Show Calculation
+                                    </summary>
+                                    <pre class="mt-2 text-xs p-2 bg-gray-600 rounded-md whitespace-pre-wrap dark:bg-gray-600 light:bg-gray-200">${report.numerology.lifePath.detail}</pre>
+                                </details>
+                            </div>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-xl flex items-center space-x-3 dark:bg-gray-700 light:bg-gray-100">
+                            ${getIconSvg('Star', 'text-orange-400')}
+                            <div>
+                                <p class="text-sm text-gray-400 font-medium dark:text-gray-400 light:text-gray-500">Birthday Number</p>
+                                <p class="text-2xl font-extrabold text-orange-300 dark:text-orange-300 light:text-orange-600">${report.numerology.birthday.value}</p>
+                                <details class="mt-2 text-sm text-gray-400 cursor-pointer">
+                                    <summary class="flex items-center text-gray-400">
+                                        ${getIconSvg('ChevronDown', 'mr-1 inline-block transition-transform duration-300 group-open:rotate-180')} Show Calculation
+                                    </summary>
+                                    <pre class="mt-2 text-xs p-2 bg-gray-600 rounded-md whitespace-pre-wrap dark:bg-gray-600 light:bg-gray-200">${report.numerology.birthday.detail}</pre>
+                                </details>
+                            </div>
+                        </div>
+                    </div>`;
+
+            selectedMethods.forEach(method => {
+                html += `
+                <div class="mt-6 border-t pt-4 border-gray-600 dark:border-gray-600 light:border-gray-300">
+                    <h4 class="font-bold text-lg mb-2">${method} Numerology</h4>
+                    <div class="space-y-3">
+                        <p>Destiny Number: <span class="font-bold text-indigo-400 dark:text-indigo-400 light:text-indigo-600">${report.numerology[method].destiny.value}</span></p>
+                        <details class="mt-1 text-sm text-gray-400 cursor-pointer">
+                            <summary class="flex items-center text-gray-400">
+                                ${getIconSvg('ChevronDown', 'mr-1 inline-block transition-transform duration-300 group-open:rotate-180')} Show Calculation
+                            </summary>
+                            <pre class="mt-2 text-xs p-2 bg-gray-600 rounded-md whitespace-pre-wrap dark:bg-gray-600 light:bg-gray-200">${report.numerology[method].destiny.detail}</pre>
+                        </details>
+                        <p>Soul Urge Number: <span class="font-bold text-indigo-400 dark:text-indigo-400 light:text-indigo-600">${report.numerology[method].soulUrge.value}</span></p>
+                        <details class="mt-1 text-sm text-gray-400 cursor-pointer">
+                            <summary class="flex items-center text-gray-400">
+                                ${getIconSvg('ChevronDown', 'mr-1 inline-block transition-transform duration-300 group-open:rotate-180')} Show Calculation
+                            </summary>
+                            <pre class="mt-2 text-xs p-2 bg-gray-600 rounded-md whitespace-pre-wrap dark:bg-gray-600 light:bg-gray-200">${report.numerology[method].soulUrge.detail}</pre>
+                        </details>
+                        <p>Personality Number: <span class="font-bold text-indigo-400 dark:text-indigo-400 light:text-indigo-600">${report.numerology[method].personality.value}</span></p>
+                        <details class="mt-1 text-sm text-gray-400 cursor-pointer">
+                            <summary class="flex items-center text-gray-400">
+                                ${getIconSvg('ChevronDown', 'mr-1 inline-block transition-transform duration-300 group-open:rotate-180')} Show Calculation
+                            </summary>
+                            <pre class="mt-2 text-xs p-2 bg-gray-600 rounded-md whitespace-pre-wrap dark:bg-gray-600 light:bg-gray-200">${report.numerology[method].personality.detail}</pre>
+                        </details>
+                    </div>
+                </div>`;
+            });
+            
+            html += `
+                    <!-- Lo Shu Grid Section -->
+                    <div class="mt-6 border-t pt-4 border-gray-600 dark:border-gray-600 light:border-gray-300">
+                        <h4 class="font-bold text-lg mb-2">Lo Shu Grid</h4>
+                        <div class="flex flex-wrap gap-4 items-start">
+                            <div class="text-center">
+                                <p class="text-sm text-gray-400 dark:text-gray-400 light:text-gray-500 mb-1">Based on DOB</p>
+                                ${renderLoShuChart(report.numerology.loShuGrids.dob)}
+                            </div>
+            `;
+            selectedMethods.forEach(method => {
+                html += `
+                            <div class="text-center">
+                                <p class="text-sm text-gray-400 dark:text-gray-400 light:text-gray-500 mb-1">Based on ${method}</p>
+                                ${renderLoShuChart(report.numerology.loShuGrids[method])}
+                            </div>
+                `;
+            });
+            html += `
+                        </div>
+                    </div>
+                </div>
+                <!-- Astrology Section -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4 border-b border-gray-600 pb-2 dark:border-gray-600 light:border-gray-300">Astrology</h3>
+                    <div class="prose prose-sm prose-invert dark:prose-invert light:prose max-w-none">
+                        <p>${report.astrology.replace(/\n/g, '</p><p>')}</p>
+                    </div>
+                </div>
+            </div>`;
+
+            return html;
+        };
+
+        const updateResultsPanel = (reportData) => {
+            let html = '';
+            if (reportData.person1) {
+                const p1Html = renderPersonReport(name1Input.value, reportData.person1, 'person1');
+                html += p1Html;
+            }
+            if (reportData.person2) {
+                const p2Html = renderPersonReport(name2Input.value, reportData.person2, 'person2');
+                html += `<div class="mt-8 lg:mt-0">${p2Html}</div>`;
+            }
+            resultsPanel.innerHTML = html;
+        };
+
+        const renderCheckboxes = () => {
+            methodologyCheckboxesContainer.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="select-all-checkbox" value="select-all" checked class="w-4 h-4 text-blue-600 bg-gray-700 rounded border-gray-600 focus:ring-blue-500 cursor-pointer">
+                    <label for="select-all-checkbox" class="font-bold cursor-pointer">Select All</label>
+                </div>
+            `;
+            allMethods.forEach(method => {
+                const methodId = `method-${method.toLowerCase().replace(/\s/g, '-')}`;
+                methodologyCheckboxesContainer.innerHTML += `
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="${methodId}" value="${method}" checked class="w-4 h-4 text-blue-600 bg-gray-700 rounded border-gray-600 focus:ring-blue-500 cursor-pointer">
+                        <label for="${methodId}" class="cursor-pointer">${method}</label>
+                    </div>
+                `;
+            });
+            selectedMethods = [...allMethods];
+        };
+
+        // --- Core Numerology Functions (same as React code) ---
+        const reduceNumber = (num) => {
+            if (MASTER_NUMBERS.has(num)) return num;
+            let sum = num;
+            while (sum > 9 && !MASTER_NUMBERS.has(sum)) {
+                sum = String(sum).split('').reduce((acc, digit) => acc + parseInt(digit, 10), 0);
+            }
+            return sum;
+        };
+
+        const getDestinyNumber = (name, methodology) => {
+            let total = 0;
+            const sanitizedName = name.replace(/[^a-zA-Z]/g, '').toUpperCase();
+            const detail = `Full Name letters and their values:\\n${sanitizedName.split('').map(char => `${char}=${methodology[char] || 0}`).join(' + ')}`;
+            total = sanitizedName.split('').reduce((sum, char) => sum + (methodology[char] || 0), 0);
+            const finalNumber = reduceNumber(total);
+            return { value: finalNumber, detail: `${detail} = ${total}.\\nReduction: ${total} -> ${finalNumber}.` };
+        };
+
+        const getSoulUrgeNumber = (name, methodology) => {
+            let total = 0;
+            const sanitizedName = name.replace(/[^a-zA-Z]/g, '').toUpperCase();
+            const vowels = sanitizedName.split('').filter(char => MAPPINGS.Vowels.includes(char));
+            const detail = `Vowels and their values:\\n${vowels.map(char => `${char}=${methodology[char] || 0}`).join(' + ')}`;
+            total = vowels.reduce((sum, char) => sum + (methodology[char] || 0), 0);
+            const finalNumber = reduceNumber(total);
+            return { value: finalNumber, detail: `${detail} = ${total}.\\nReduction: ${total} -> ${finalNumber}.` };
+        };
+
+        const getPersonalityNumber = (name, methodology) => {
+            let total = 0;
+            const sanitizedName = name.replace(/[^a-zA-Z]/g, '').toUpperCase();
+            const consonants = sanitizedName.split('').filter(char => MAPPINGS.Consonants.includes(char));
+            const detail = `Consonants and their values:\\n${consonants.map(char => `${char}=${methodology[char] || 0}`).join(' + ')}`;
+            total = consonants.reduce((sum, char) => sum + (methodology[char] || 0), 0);
+            const finalNumber = reduceNumber(total);
+            return { value: finalNumber, detail: `${detail} = ${total}.\\nReduction: ${total} -> ${finalNumber}.` };
+        };
+
+        const getBirthdayNumber = (dob) => {
+            const normalizedDob = dob.replace(/-/g, '/');
+            const dobDay = parseInt(normalizedDob.split('/')[0], 10);
+            if (isNaN(dobDay)) return { value: 'N/A', detail: 'Invalid Date of Birth format.' };
+            const finalNumber = reduceNumber(dobDay);
+            const detail = `Day of birth is ${dobDay}.\\nReduction: ${dobDay} -> ${finalNumber}`;
+            return { value: finalNumber, detail };
+        };
+
+        const getLifePathNumber = (dob) => {
+            const normalizedDob = dob.replace(/-/g, '/');
+            const [day, month, year] = normalizedDob.split('/').map(Number);
+            const reducedYear = reduceNumber(year);
+            const reducedMonth = reduceNumber(month);
+            const reducedDay = reduceNumber(day);
+            const sum = reducedYear + reducedMonth + reducedDay;
+            const finalNumber = reduceNumber(sum);
+            const detail = `Year (${year}) -> ${reducedYear}\\nMonth (${month}) -> ${reducedMonth}\\nDay (${day}) -> ${reducedDay}\\nSum: ${reducedYear} + ${reducedMonth} + ${reducedDay} = ${sum}.\\nReduction: ${sum} -> ${finalNumber}.`;
+            return { value: finalNumber, detail };
+        };
+
+        const getLoShuChartNumbers = (dob, name, methodology) => {
+            let allDigits = [];
+            const dobDigits = dob.replace(/[\/\-]/g, '').split('').filter(d => d !== '0');
+            allDigits = allDigits.concat(dobDigits.map(Number));
+            if (name && methodology) {
+                const sanitizedName = name.replace(/[^a-zA-Z]/g, '').toUpperCase();
+                const nameNumbers = sanitizedName.split('').map(char => methodology[char] || 0).filter(n => n > 0);
+                allDigits = allDigits.concat(nameNumbers);
+            }
+            const grid = { '4': 0, '9': 0, '2': 0, '3': 0, '5': 0, '7': 0, '8': 0, '1': 0, '6': 0 };
+            allDigits.forEach(num => {
+                if (grid.hasOwnProperty(num.toString())) {
+                    grid[num.toString()] += 1;
+                }
+            });
+            return grid;
+        };
+
+        // --- Astrology Calculation (same as React code) ---
+        const getZodiacSign = (dob) => {
+            const normalizedDob = dob.replace(/-/g, '/');
+            const [day, month] = normalizedDob.split('/').map(Number);
+            if (isNaN(day) || isNaN(month) || month < 1 || month > 12) return null;
+            if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return "Aquarius";
+            if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return "Pisces";
+            if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return "Aries";
+            if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return "Taurus";
+            if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return "Gemini";
+            if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return "Cancer";
+            if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return "Leo";
+            if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return "Virgo";
+            if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return "Libra";
+            if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return "Scorpio";
+            if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return "Sagittarius";
+            if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return "Capricorn";
+            return null;
+        };
+        const generateZodiacBasics = (zodiacSign) => {
+            const basics = ZODIAC_BASICS[zodiacSign];
+            if (!basics) return '';
+            return `### Zodiac Basic Information\\n---\\nYour Zodiac Sign is: **${zodiacSign}**\\n* Lucky Number: **${basics.luckyNumber}**\\n* Lucky Color: **${basics.luckyColor}**\\n* Favorable Element: **${basics.element}**\\n* Birthstone: **${basics.birthstone}**\\n* Ruling Planet: **${basics.planet}**\\n* Lucky Day: **${basics.luckyDay}**\\n`;
+        };
+
+        // --- API Calls (same as React code) ---
+        const getAstrologyReport = async ({ name, dob, tob, location }) => {
+            const prompt = `Act as a professional and expert astrologer. Generate a comprehensive and detailed natal chart analysis for a person. The report should be written in a warm, encouraging, and clear tone.
 
 User's details:
 Name: ${name}
@@ -221,581 +514,293 @@ The report should include:
 - The report should be easy to read and understand for someone with a basic knowledge of astrology.
 - Do not make any disclaimers or mention that you are an AI.`;
 
-  const payload = {
-    contents: [{ parts: [{ text: prompt }] }],
-    model: "gemini-2.5-flash-preview-05-20"
-  };
-  const apiKey = "";
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                model: "gemini-2.5-flash-preview-05-20"
+            };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
-  let retries = 0;
-  const maxRetries = 3;
-  const baseDelay = 1000;
+            let retries = 0;
+            const maxRetries = 3;
+            const baseDelay = 1000;
 
-  const fetchData = async () => {
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!response.ok) {
-        if (response.status === 429 && retries < maxRetries) {
-          const delay = baseDelay * Math.pow(2, retries);
-          retries++;
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return fetchData();
-        } else {
-          throw new Error(`API call failed with status: ${response.status}`);
-        }
-      }
-      const result = await response.json();
-      if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        return result.candidates[0].content.parts[0].text;
-      } else {
-        console.error("Unexpected API response structure:", result);
-        throw new Error("Invalid response structure from API.");
-      }
-    } catch (error) {
-      console.error("Error during astrology report generation:", error);
-      return `*An error occurred while generating the astrology report. Please try again. Error details: ${error.message}*`;
-    }
-  };
+            const fetchData = async () => {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) {
+                        if (response.status === 429 && retries < maxRetries) {
+                            const delay = baseDelay * Math.pow(2, retries);
+                            retries++;
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            return fetchData();
+                        } else {
+                            throw new Error(`API call failed with status: ${response.status}`);
+                        }
+                    }
+                    const result = await response.json();
+                    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        return result.candidates[0].content.parts[0].text;
+                    } else {
+                        console.error("Unexpected API response structure:", result);
+                        throw new Error("Invalid response structure from API.");
+                    }
+                } catch (error) {
+                    console.error("Error during astrology report generation:", error);
+                    return `*An error occurred while generating the astrology report. Please try again. Error details: ${error.message}*`;
+                }
+            };
 
-  return fetchData();
-};
+            return fetchData();
+        };
 
-const speakTextInThread = async (text, setLoading, setError) => {
-  setLoading(true);
-  setError(null);
-  const payload = {
-    contents: [{ parts: [{ text }] }],
-    generationConfig: {
-      responseModalities: ["AUDIO"],
-      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } }
-    },
-    model: "gemini-2.5-flash-preview-tts"
-  };
-  const apiKey = "";
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+        const speakText = async (text) => {
+            setTtsLoading(true);
+            const payload = {
+                contents: [{ parts: [{ text }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } }
+                },
+                model: "gemini-2.5-flash-preview-tts"
+            };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
 
-  const base64ToArrayBuffer = (base64) => {
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
-    return bytes.buffer;
-  };
+            const base64ToArrayBuffer = (base64) => {
+                const binaryString = atob(base64);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
+                return bytes.buffer;
+            };
 
-  const pcmToWav = (pcmData, sampleRate) => {
-    const numChannels = 1;
-    const bytesPerSample = 2;
-    const dataLength = pcmData.length * bytesPerSample;
-    const buffer = new ArrayBuffer(44 + dataLength);
-    const view = new DataView(buffer);
-    const writeString = (v, offset, str) => {
-      for (let i = 0; i < str.length; i++) { v.setUint8(offset + i, str.charCodeAt(i)); }
-    };
-    writeString(view, 0, 'RIFF');
-    view.setUint32(4, 36 + dataLength, true);
-    writeString(view, 8, 'WAVE');
-    writeString(view, 12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, numChannels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
-    view.setUint16(32, numChannels * bytesPerSample, true);
-    view.setUint16(34, bytesPerSample * 8, true);
-    writeString(view, 36, 'data');
-    view.setUint32(40, dataLength, true);
-    let offset = 44;
-    for (let i = 0; i < pcmData.length; i++) {
-      view.setInt16(offset, pcmData[i], true);
-      offset += bytesPerSample;
-    }
-    return new Blob([view], { type: 'audio/wav' });
-  };
+            const pcmToWav = (pcmData, sampleRate) => {
+                const numChannels = 1;
+                const bytesPerSample = 2;
+                const dataLength = pcmData.length * bytesPerSample;
+                const buffer = new ArrayBuffer(44 + dataLength);
+                const view = new DataView(buffer);
+                const writeString = (v, offset, str) => {
+                    for (let i = 0; i < str.length; i++) { v.setUint8(offset + i, str.charCodeAt(i)); }
+                };
+                writeString(view, 0, 'RIFF');
+                view.setUint32(4, 36 + dataLength, true);
+                writeString(view, 8, 'WAVE');
+                writeString(view, 12, 'fmt ');
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true);
+                view.setUint16(22, numChannels, true);
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
+                view.setUint16(32, numChannels * bytesPerSample, true);
+                view.setUint16(34, bytesPerSample * 8, true);
+                writeString(view, 36, 'data');
+                view.setUint32(40, dataLength, true);
+                let offset = 44;
+                for (let i = 0; i < pcmData.length; i++) {
+                    view.setInt16(offset, pcmData[i], true);
+                    offset += bytesPerSample;
+                }
+                return new Blob([view], { type: 'audio/wav' });
+            };
 
-  try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                const audioData = result?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                const mimeType = result?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.mimeType;
+
+                if (response.ok && audioData && mimeType && mimeType.startsWith("audio/")) {
+                    const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+                    const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 16000;
+                    const pcmData = new Int16Array(base64ToArrayBuffer(audioData));
+                    const wavBlob = pcmToWav(pcmData, sampleRate);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+                    const audio = new Audio(audioUrl);
+                    audio.play();
+                    audio.onended = () => {
+                        URL.revokeObjectURL(audioUrl);
+                        setTtsLoading(false);
+                    };
+                } else {
+                    console.error("Invalid audio data from API:", result);
+                    setErrorMessage("Failed to generate speech.");
+                }
+            } catch (error) {
+                console.error("TTS API call failed:", error);
+                setErrorMessage('Failed to generate speech.');
+            } finally {
+                setTtsLoading(false);
+            }
+        };
+
+        // --- Event Listeners and Main Logic ---
+        document.getElementById('analyze-btn').addEventListener('click', async () => {
+            setErrorMessage('');
+            const name1 = name1Input.value.trim();
+            const dob1 = dob1Input.value.trim();
+            const name2 = name2Input.value.trim();
+            const dob2 = dob2Input.value.trim();
+            const tob1 = tob1Input.value.trim();
+            const location1 = location1Input.value.trim();
+            const tob2 = tob2Input.value.trim();
+            const location2 = location2Input.value.trim();
+
+            const dateRegex = /^\d{2}[/\-]\d{2}[/\-]\d{4}$/;
+
+            if (!name1 || !dob1) {
+                setErrorMessage('Please enter a name and date of birth for Person 1.');
+                return;
+            }
+            if (!dateRegex.test(dob1)) {
+                setErrorMessage('Invalid Date of Birth format for Person 1. Please use DD/MM/YYYY or DD-MM-YYYY.');
+                return;
+            }
+            if (name2 && dob2 && !dateRegex.test(dob2)) {
+                setErrorMessage('Invalid Date of Birth format for Person 2. Please use DD/MM/YYYY or DD-MM-YYYY.');
+                return;
+            }
+
+            setLoading(true);
+            
+            const person1Data = { name: name1, dob: dob1, tob: tob1, location: location1 };
+            const person2Data = { name: name2, dob: dob2, tob: tob2, location: location2 };
+            
+            let report1 = null;
+            let report2 = null;
+            let combinedReportText = '';
+
+            try {
+                // Generate report for Person 1
+                const numerology1 = {};
+                selectedMethods.forEach(method => {
+                    const methodology = MAPPINGS[method];
+                    numerology1[method] = {
+                        destiny: getDestinyNumber(name1, methodology),
+                        soulUrge: getSoulUrgeNumber(name1, methodology),
+                        personality: getPersonalityNumber(name1, methodology)
+                    };
+                });
+                numerology1.lifePath = getLifePathNumber(dob1);
+                numerology1.birthday = getBirthdayNumber(dob1);
+                const loShuGrids1 = {};
+                loShuGrids1.dob = getLoShuChartNumbers(dob1, null, null);
+                selectedMethods.forEach(method => {
+                    loShuGrids1[method] = getLoShuChartNumbers(dob1, name1, MAPPINGS[method]);
+                });
+                numerology1.loShuGrids = loShuGrids1;
+                const astrology1 = await getAstrologyReport(person1Data);
+                report1 = { numerology: numerology1, astrology: generateZodiacBasics(getZodiacSign(dob1)) + '---\n' + astrology1 };
+                combinedReportText += 'Person 1 Report:\n' + JSON.stringify(report1.numerology) + '\n\n' + report1.astrology;
+
+                // Generate report for Person 2 if data is present
+                if (name2 && dob2) {
+                    const numerology2 = {};
+                    selectedMethods.forEach(method => {
+                        const methodology = MAPPINGS[method];
+                        numerology2[method] = {
+                            destiny: getDestinyNumber(name2, methodology),
+                            soulUrge: getSoulUrgeNumber(name2, methodology),
+                            personality: getPersonalityNumber(name2, methodology)
+                        };
+                    });
+                    numerology2.lifePath = getLifePathNumber(dob2);
+                    numerology2.birthday = getBirthdayNumber(dob2);
+                    const loShuGrids2 = {};
+                    loShuGrids2.dob = getLoShuChartNumbers(dob2, null, null);
+                    selectedMethods.forEach(method => {
+                        loShuGrids2[method] = getLoShuChartNumbers(dob2, name2, MAPPINGS[method]);
+                    });
+                    numerology2.loShuGrids = loShuGrids2;
+                    const astrology2 = await getAstrologyReport(person2Data);
+                    report2 = { numerology: numerology2, astrology: generateZodiacBasics(getZodiacSign(dob2)) + '---\n' + astrology2 };
+                    combinedReportText += '\n\n--- Comparison for Person 2 ---\n\n' + 'Person 2 Report:\n' + JSON.stringify(report2.numerology) + '\n\n' + report2.astrology;
+                }
+                
+                lastCombinedReport = combinedReportText;
+                updateResultsPanel({ person1: report1, person2: report2 });
+            } catch (err) {
+                console.error(err);
+                setErrorMessage('An error occurred while generating the report.');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        document.getElementById('speak-btn').addEventListener('click', () => {
+            if (lastCombinedReport) {
+                speakText(lastCombinedReport);
+            } else {
+                setErrorMessage('No report to speak. Please run an analysis first.');
+            }
+        });
+
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            if (lastCombinedReport) {
+                try {
+                    const tempInput = document.createElement('textarea');
+                    document.body.appendChild(tempInput);
+                    tempInput.value = lastCombinedReport;
+                    tempInput.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempInput);
+                    setErrorMessage('Report copied to clipboard!');
+                } catch (err) {
+                    setErrorMessage('Failed to copy.');
+                }
+            } else {
+                setErrorMessage('No report to copy. Please run an analysis first.');
+            }
+        });
+
+        document.getElementById('theme-btn').addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                document.body.classList.add('bg-gray-900', 'text-gray-200');
+                document.body.classList.remove('bg-gray-100', 'text-gray-800');
+                document.querySelectorAll('.card').forEach(card => card.classList.add('dark:bg-gray-800', 'dark:border-gray-700'));
+            } else {
+                document.body.classList.add('bg-gray-100', 'text-gray-800');
+                document.body.classList.remove('bg-gray-900', 'text-gray-200');
+                document.querySelectorAll('.card').forEach(card => card.classList.remove('dark:bg-gray-800', 'dark:border-gray-700'));
+            }
+        });
+
+        document.getElementById('methodology-checkboxes').addEventListener('change', (event) => {
+            const { value, checked } = event.target;
+            if (value === 'select-all') {
+                document.querySelectorAll('#methodology-checkboxes input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = checked;
+                });
+                selectedMethods = checked ? [...allMethods] : [];
+            } else {
+                if (checked) {
+                    selectedMethods.push(value);
+                } else {
+                    selectedMethods = selectedMethods.filter(m => m !== value);
+                }
+                const allChecked = allMethods.every(method => selectedMethods.includes(method));
+                document.getElementById('select-all-checkbox').checked = allChecked;
+            }
+        });
+
+        // Initial setup
+        renderCheckboxes();
+        document.getElementById('analyze-icon').innerHTML = getIconSvg('RefreshCcw');
+        document.getElementById('speak-icon').innerHTML = getIconSvg('Volume2');
+        document.getElementById('copy-icon').innerHTML = getIconSvg('Clipboard');
+        document.getElementById('theme-icon').innerHTML = getIconSvg('Palette');
     });
-    const result = await response.json();
-    const audioData = result?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    const mimeType = result?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.mimeType;
+</script>
 
-    if (response.ok && audioData && mimeType && mimeType.startsWith("audio/")) {
-      const sampleRateMatch = mimeType.match(/rate=(\d+)/);
-      const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 16000;
-      const pcmData = new Int16Array(base64ToArrayBuffer(audioData));
-      const wavBlob = pcmToWav(pcmData, sampleRate);
-      const audioUrl = URL.createObjectURL(wavBlob);
-      const audio = new Audio(audioUrl);
-      audio.play();
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        setLoading(false);
-      };
-    } else {
-      console.error("Invalid audio data from API:", result);
-      throw new Error("Invalid audio data from API.");
-    }
-  } catch (error) {
-    console.error("TTS API call failed:", error);
-    setError('Failed to generate speech.');
-    setLoading(false);
-  }
-};
-
-/**
- * Main application component. Manages state, logic, and rendering.
- */
-export default function App() {
-  // All available numerology methods for checkboxes
-  const allMethods = Object.keys(MAPPINGS).filter(key => !['Vowels', 'Consonants'].includes(key));
-  
-  // State for Person 1
-  const [name1, setName1] = useState('');
-  const [dob1, setDob1] = useState('');
-  const [tob1, setTob1] = useState('');
-  const [location1, setLocation1] = useState('');
-  
-  // State for Person 2
-  const [name2, setName2] = useState('');
-  const [dob2, setDob2] = useState('');
-  const [tob2, setTob2] = useState('');
-  const [location2, setLocation2] = useState('');
-
-  // State for UI and results
-  const [selectedMethods, setSelectedMethods] = useState(allMethods);
-  const [loading, setLoading] = useState(false);
-  const [reportData, setReportData] = useState(null);
-  const [error, setError] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [ttsLoading, setTtsLoading] = useState(false);
-  const [ttsError, setTtsError] = useState(null);
-
-
-  /**
-   * Generates all numerology and astrology reports for a single person.
-   * @param {object} person - The person's data (name, dob, tob, location).
-   * @returns {Promise<object>} An object containing both numerology and astrology results.
-   */
-  const generateFullReport = async (person) => {
-    const numerologyResults = {};
-    const numerologyText = [];
-
-    // Calculate all numerology numbers for all selected methods
-    selectedMethods.forEach(methodName => {
-      const methodologyMapping = MAPPINGS[methodName];
-      if (Object.keys(methodologyMapping).length > 0) {
-        const destiny = getDestinyNumber(person.name, methodologyMapping);
-        const soulUrge = getSoulUrgeNumber(person.name, methodologyMapping);
-        const personality = getPersonalityNumber(person.name, methodologyMapping);
-        numerologyResults[methodName] = { destiny, soulUrge, personality };
-        numerologyText.push(`${methodName} Numerology: Destiny: ${destiny.value}, Soul Urge: ${soulUrge.value}, Personality: ${personality.value}.`);
-      }
-    });
-
-    const lifePath = getLifePathNumber(person.dob);
-    const birthday = getBirthdayNumber(person.dob);
-    numerologyResults.lifePath = lifePath;
-    numerologyResults.birthday = birthday;
-    numerologyText.push(`Life Path: ${lifePath.value}. Birthday: ${birthday.value}.`);
-
-    // Lo Shu grid generation
-    const loShuGrids = {};
-    const loShuText = [];
-    // Base grid from DOB
-    loShuGrids.dob = getLoShuChartNumbers(person.dob, null, null);
-    loShuText.push('Lo Shu Grid based on Date of Birth.');
-    
-    // Grids for each selected numerology method (name + dob)
-    selectedMethods.forEach(methodName => {
-      const methodologyMapping = MAPPINGS[methodName];
-      const nameGrid = getLoShuChartNumbers(person.dob, person.name, methodologyMapping);
-      loShuGrids[methodName] = nameGrid;
-      loShuText.push(`Lo Shu Grid based on ${methodName} Numerology.`);
-    });
-    
-    numerologyResults.loShuGrids = loShuGrids;
-    numerologyText.push(loShuText.join(' '));
-    
-    // Prepend zodiac basics to the astrology report
-    const zodiacSign = getZodiacSign(person.dob);
-    const zodiacBasicsText = generateZodiacBasics(zodiacSign);
-    const astrologyReport = await getAstrologyReport(person);
-    const finalAstrologyReport = `${zodiacBasicsText}\n---\n${astrologyReport}`;
-    
-    return { numerology: numerologyResults, astrology: finalAstrologyReport, text: numerologyText.join(' ') + ' ' + finalAstrologyReport };
-  };
-
-  /**
-   * Handles the 'Analyze & Compare' button click.
-   * Orchestrates all calculations and report generation.
-   */
-  const handleAnalyze = async () => {
-    setLoading(true);
-    setReportData(null);
-    setError(null);
-
-    const person1Data = { name: name1, dob: dob1, tob: tob1, location: location1 };
-    const person2Data = { name: name2, dob: dob2, tob: tob2, location: location2 };
-    
-    const dateRegex = /^\d{2}[/\-]\d{2}[/\-]\d{4}$/;
-
-    if (!name1 || !dob1) {
-      setError('Please enter a name and date of birth for Person 1.');
-      setLoading(false);
-      return;
-    }
-
-    if (!dateRegex.test(dob1)) {
-      setError('Invalid Date of Birth format for Person 1. Please use DD/MM/YYYY or DD-MM-YYYY.');
-      setLoading(false);
-      return;
-    }
-
-    let report1 = null;
-    let report2 = null;
-
-    try {
-      report1 = await generateFullReport(person1Data);
-      if (name2 && dob2) {
-        if (!dateRegex.test(dob2)) {
-          setError('Invalid Date of Birth format for Person 2. Please use DD/MM/YYYY or DD-MM-YYYY.');
-          setLoading(false);
-          return;
-        }
-        report2 = await generateFullReport(person2Data);
-      }
-      setReportData({ person1: report1, person2: report2 });
-    } catch (err) {
-      console.error(err);
-      setError('An error occurred while generating the report.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // UI rendering functions
-  const renderLoShuChart = (gridData) => {
-    const order = [4, 9, 2, 3, 5, 7, 8, 1, 6];
-    return (
-      <div className="lo-shu-grid grid grid-cols-3 gap-1 w-32 h-32 border-2 border-gray-500 my-2 rounded-lg">
-        {order.map(num => (
-          <div key={num} className="lo-shu-cell bg-gray-700 flex items-center justify-center font-bold text-lg rounded-md dark:bg-gray-700 dark:text-gray-100 light:bg-gray-200 light:text-gray-800">
-            {gridData[num] > 0 ? num.toString().repeat(gridData[num]) : ''}
-          </div>
-        ))}
-      </div>
-    );
-  };
-  
-  const renderPersonReport = (personName, report, personId) => {
-    if (!report) return null;
-
-    return (
-      <div className="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 dark:bg-gray-800 light:bg-white light:border-gray-300">
-        <h2 className="text-2xl font-bold mb-4 text-purple-300 dark:text-purple-300 light:text-purple-600 flex items-center">
-          <User className="mr-2" /> {personName}
-        </h2>
-        
-        {/* Numerology Section */}
-        <div className="mb-8">
-          <h3 className="text-xl font-bold mb-4 border-b border-gray-600 pb-2 dark:border-gray-600 light:border-gray-300">Numerology</h3>
-          <div className="space-y-4">
-            <div className="bg-gray-700 p-4 rounded-xl flex items-center space-x-3 dark:bg-gray-700 light:bg-gray-100">
-              <Sparkles className="text-pink-400" size={24} />
-              <div>
-                <p className="text-sm text-gray-400 font-medium dark:text-gray-400 light:text-gray-500">Life Path Number</p>
-                <p className="text-2xl font-extrabold text-pink-300 dark:text-pink-300 light:text-pink-600">{report.numerology.lifePath.value}</p>
-                <details className="mt-2 text-sm text-gray-400 cursor-pointer">
-                  <summary className="flex items-center text-gray-400">
-                    <ChevronDown size={16} className="mr-1 inline-block transition-transform duration-300 group-open:rotate-180" /> Show Calculation
-                  </summary>
-                  <pre className="mt-2 text-xs p-2 bg-gray-600 rounded-md whitespace-pre-wrap dark:bg-gray-600 light:bg-gray-200">{report.numerology.lifePath.detail}</pre>
-                </details>
-              </div>
-            </div>
-            <div className="bg-gray-700 p-4 rounded-xl flex items-center space-x-3 dark:bg-gray-700 light:bg-gray-100">
-              <Star className="text-orange-400" size={24} />
-              <div>
-                <p className="text-sm text-gray-400 font-medium dark:text-gray-400 light:text-gray-500">Birthday Number</p>
-                <p className="text-2xl font-extrabold text-orange-300 dark:text-orange-300 light:text-orange-600">{report.numerology.birthday.value}</p>
-                <details className="mt-2 text-sm text-gray-400 cursor-pointer">
-                  <summary className="flex items-center text-gray-400">
-                    <ChevronDown size={16} className="mr-1 inline-block transition-transform duration-300 group-open:rotate-180" /> Show Calculation
-                  </summary>
-                  <pre className="mt-2 text-xs p-2 bg-gray-600 rounded-md whitespace-pre-wrap dark:bg-gray-600 light:bg-gray-200">{report.numerology.birthday.detail}</pre>
-                </details>
-              </div>
-            </div>
-          </div>
-          
-          {selectedMethods.map((method, index) => (
-            <div key={method} className="mt-6 border-t pt-4 border-gray-600 dark:border-gray-600 light:border-gray-300">
-              <h4 className="font-bold text-lg mb-2">{method} Numerology</h4>
-              <div className="space-y-3">
-                {/* Destiny Number */}
-                <p>Destiny Number: <span className="font-bold text-indigo-400 dark:text-indigo-400 light:text-indigo-600">{report.numerology[method].destiny.value}</span></p>
-                <details className="mt-1 text-sm text-gray-400 cursor-pointer">
-                  <summary className="flex items-center text-gray-400">
-                    <ChevronDown size={16} className="mr-1 inline-block transition-transform duration-300 group-open:rotate-180" /> Show Calculation
-                  </summary>
-                  <pre className="mt-2 text-xs p-2 bg-gray-600 rounded-md whitespace-pre-wrap dark:bg-gray-600 light:bg-gray-200">{report.numerology[method].destiny.detail}</pre>
-                </details>
-                {/* Soul Urge Number */}
-                <p>Soul Urge Number: <span className="font-bold text-indigo-400 dark:text-indigo-400 light:text-indigo-600">{report.numerology[method].soulUrge.value}</span></p>
-                <details className="mt-1 text-sm text-gray-400 cursor-pointer">
-                  <summary className="flex items-center text-gray-400">
-                    <ChevronDown size={16} className="mr-1 inline-block transition-transform duration-300 group-open:rotate-180" /> Show Calculation
-                  </summary>
-                  <pre className="mt-2 text-xs p-2 bg-gray-600 rounded-md whitespace-pre-wrap dark:bg-gray-600 light:bg-gray-200">{report.numerology[method].soulUrge.detail}</pre>
-                </details>
-                {/* Personality Number */}
-                <p>Personality Number: <span className="font-bold text-indigo-400 dark:text-indigo-400 light:text-indigo-600">{report.numerology[method].personality.value}</span></p>
-                <details className="mt-1 text-sm text-gray-400 cursor-pointer">
-                  <summary className="flex items-center text-gray-400">
-                    <ChevronDown size={16} className="mr-1 inline-block transition-transform duration-300 group-open:rotate-180" /> Show Calculation
-                  </summary>
-                  <pre className="mt-2 text-xs p-2 bg-gray-600 rounded-md whitespace-pre-wrap dark:bg-gray-600 light:bg-gray-200">{report.numerology[method].personality.detail}</pre>
-                </details>
-              </div>
-            </div>
-          ))}
-
-          {/* Lo Shu Grid Section */}
-          <div className="mt-6 border-t pt-4 border-gray-600 dark:border-gray-600 light:border-gray-300">
-            <h4 className="font-bold text-lg mb-2">Lo Shu Grid</h4>
-            <div className="flex flex-wrap gap-4 items-start">
-              <div className="text-center">
-                <p className="text-sm text-gray-400 dark:text-gray-400 light:text-gray-500 mb-1">Based on DOB</p>
-                {renderLoShuChart(report.numerology.loShuGrids.dob)}
-              </div>
-              {selectedMethods.map((method) => (
-                <div key={`loshu-${personId}-${method}`} className="text-center">
-                  <p className="text-sm text-gray-400 dark:text-gray-400 light:text-gray-500 mb-1">Based on {method}</p>
-                  {renderLoShuChart(report.numerology.loShuGrids[method])}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Astrology Section */}
-        <div>
-          <h3 className="text-xl font-bold mb-4 border-b border-gray-600 pb-2 dark:border-gray-600 light:border-gray-300">Astrology</h3>
-          <div className="prose prose-sm prose-invert dark:prose-invert light:prose max-w-none">
-            {report.astrology.split('\n').map((line, index) => (
-              <p key={index} className="whitespace-pre-wrap">{line}</p>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-  
-  // Handle checkbox changes for numerology methodologies
-  const handleMethodChange = (event) => {
-    const { value, checked } = event.target;
-    if (value === 'select-all') {
-      if (checked) {
-        setSelectedMethods(allMethods);
-      } else {
-        setSelectedMethods([]);
-      }
-    } else {
-      setSelectedMethods(prev =>
-        checked ? [...prev, value] : prev.filter(m => m !== value)
-      );
-    }
-  };
-
-  // State to manage a single, combined report text for copy/speak actions
-  const [lastCombinedReport, setLastCombinedReport] = useState('');
-  useEffect(() => {
-    if (reportData) {
-      const p1Text = reportData.person1?.text || '';
-      const p2Text = reportData.person2?.text ? `\n\n--- Comparison for Person 2 ---\n\n${reportData.person2.text}` : '';
-      setLastCombinedReport(p1Text + p2Text);
-    }
-  }, [reportData]);
-
-  // Handle TTS and Copy actions
-  const handleSpeak = () => {
-    if (lastCombinedReport) {
-      speakTextInThread(lastCombinedReport, setTtsLoading, setTtsError);
-    } else {
-      setError('No report to speak. Please run an analysis first.');
-    }
-  };
-
-  const handleCopy = () => {
-    if (lastCombinedReport) {
-      navigator.clipboard.writeText(lastCombinedReport)
-        .then(() => setError('Report copied to clipboard!'))
-        .catch(() => setError('Failed to copy.'));
-    } else {
-      setError('No report to copy. Please run an analysis first.');
-    }
-  };
-  
-  // Custom Tailwind classes for input fields to ensure black text contrast
-  const inputClassNames = `input-field w-full px-4 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500
-                          ${isDarkMode ? 'bg-gray-700 border-gray-600 text-black placeholder-gray-400' : 'bg-gray-200 border-gray-300 text-black placeholder-gray-500'}`;
-
-
-  return (
-    <div className={`min-h-screen font-['Inter'] transition-colors duration-500 ${isDarkMode ? 'bg-gray-900 text-gray-200' : 'bg-gray-100 text-gray-800'}`}>
-      <div className="max-w-7xl mx-auto p-4 sm:p-8">
-        <header className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600 mb-2">
-            Numerology & Astrology Nexus
-          </h1>
-          <p className="text-lg text-gray-400 dark:text-gray-400 light:text-gray-600">
-            Simultaneously calculate and compare your life path and cosmic identity.
-          </p>
-        </header>
-
-        <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Panel: Inputs & Controls */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className={`card dark:bg-gray-800 light:bg-white`}>
-              <h2 className={`text-xl font-bold mb-4 dark:text-purple-300 light:text-purple-600`}>Person 1</h2>
-              <div className="input-group">
-                <label className="block mb-1">Name:</label>
-                <input type="text" value={name1} onChange={(e) => setName1(e.target.value)} placeholder="Enter Full Name" className={inputClassNames} />
-              </div>
-              <div className="input-group">
-                <label className="block mb-1">Date of Birth:</label>
-                <input type="text" value={dob1} onChange={(e) => setDob1(e.target.value)} placeholder="DD/MM/YYYY or DD-MM-YYYY" className={inputClassNames} />
-              </div>
-              <div className="input-group">
-                <label className="block mb-1">Time of Birth:</label>
-                <input type="text" value={tob1} onChange={(e) => setTob1(e.target.value)} placeholder="HH:MM (optional)" className={inputClassNames} />
-              </div>
-              <div className="input-group">
-                <label className="block mb-1">Location of Birth:</label>
-                <input type="text" value={location1} onChange={(e) => setLocation1(e.target.value)} placeholder="City, Country (optional)" className={inputClassNames} />
-              </div>
-            </div>
-
-            <div className={`card dark:bg-gray-800 light:bg-white`}>
-              <h2 className={`text-xl font-bold mb-4 dark:text-purple-300 light:text-purple-600`}>Person 2</h2>
-              <div className="input-group">
-                <label className="block mb-1">Name:</label>
-                <input type="text" value={name2} onChange={(e) => setName2(e.target.value)} placeholder="Enter Full Name (Optional)" className={inputClassNames} />
-              </div>
-              <div className="input-group">
-                <label className="block mb-1">Date of Birth:</label>
-                <input type="text" value={dob2} onChange={(e) => setDob2(e.target.value)} placeholder="DD/MM/YYYY or DD-MM-YYYY (Optional)" className={inputClassNames} />
-              </div>
-              <div className="input-group">
-                <label className="block mb-1">Time of Birth:</label>
-                <input type="text" value={tob2} onChange={(e) => setTob2(e.target.value)} placeholder="HH:MM (optional)" className={inputClassNames} />
-              </div>
-              <div className="input-group">
-                <label className="block mb-1">Location of Birth:</label>
-                <input type="text" value={location2} onChange={(e) => setLocation2(e.target.value)} placeholder="City, Country (optional)" className={inputClassNames} />
-              </div>
-            </div>
-
-            <div className={`card dark:bg-gray-800 light:bg-white`}>
-              <h2 className="text-xl font-bold mb-4">Select Numerology Methodologies</h2>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="select-all-checkbox"
-                    value="select-all"
-                    checked={selectedMethods.length === allMethods.length}
-                    onChange={handleMethodChange}
-                    className="w-4 h-4 text-blue-600 bg-gray-700 rounded border-gray-600 focus:ring-blue-500"
-                  />
-                  <label htmlFor="select-all-checkbox" className="font-bold cursor-pointer">Select All</label>
-                </div>
-                {allMethods.map(method => (
-                  <div key={method} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id={`method-${method.toLowerCase().replace(/\s/g, '-')}`}
-                      value={method}
-                      checked={selectedMethods.includes(method)}
-                      onChange={handleMethodChange}
-                      className="w-4 h-4 text-blue-600 bg-gray-700 rounded border-gray-600 focus:ring-blue-500"
-                    />
-                    <label htmlFor={`method-${method.toLowerCase().replace(/\s/g, '-')}`} className="cursor-pointer">{method}</label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className={`card space-y-4 dark:bg-gray-800 light:bg-white`}>
-              <h2 className="text-xl font-bold">Actions</h2>
-              <button
-                onClick={handleAnalyze}
-                className="w-full btn btn-primary flex items-center justify-center space-x-2"
-                disabled={loading}
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    <RefreshCcw size={20} />
-                    <span>Analyze & Compare</span>
-                  </>
-                )}
-              </button>
-              <div className="grid grid-cols-2 gap-4">
-                <button onClick={handleSpeak} className="btn btn-secondary flex items-center justify-center space-x-2" disabled={ttsLoading}>
-                  {ttsLoading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <>
-                      <Volume2 size={20} />
-                      <span>Speak</span>
-                    </>
-                  )}
-                </button>
-                <button onClick={handleCopy} className="btn btn-secondary flex items-center justify-center space-x-2">
-                  <Clipboard size={20} />
-                  <span>Copy</span>
-                </button>
-              </div>
-              <button onClick={() => setIsDarkMode(!isDarkMode)} className="btn btn-secondary w-full">
-                <Palette size={20} className="mr-2"/> Toggle Theme
-              </button>
-            </div>
-            {error && <div className="text-red-500 mt-4 text-center">{error}</div>}
-            {ttsError && <div className="text-red-500 mt-4 text-center">{ttsError}</div>}
-          </div>
-
-          {/* Right Panel: Results */}
-          <div className="lg:col-span-2">
-            {loading && !reportData && (
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                <p className="mt-4 text-lg text-gray-400">Analyzing the cosmos... this may take a moment.</p>
-              </div>
-            )}
-            {!loading && !reportData && (
-              <div className={`flex items-center justify-center p-8 border-4 border-dashed rounded-2xl border-gray-700 h-96 dark:border-gray-700 light:border-gray-300`}>
-                <p className="text-center text-gray-400">Your comprehensive report will appear here after analysis.</p>
-              </div>
-            )}
-            {!loading && reportData && (
-              <div className={`grid grid-cols-1 ${reportData.person2 ? 'lg:grid-cols-2' : ''} gap-8`}>
-                {renderPersonReport(name1, reportData.person1, 'person1')}
-                {reportData.person2 && renderPersonReport(name2, reportData.person2, 'person2')}
-              </div>
-            )}
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-}
+</body>
+</html>
