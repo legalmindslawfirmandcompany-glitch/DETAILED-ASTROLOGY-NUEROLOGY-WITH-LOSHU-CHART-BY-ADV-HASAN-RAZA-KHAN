@@ -11,18 +11,18 @@
         body { font-family: 'Inter', sans-serif; }
         .card { @apply p-6 rounded-2xl shadow-lg border transition-colors duration-300; }
         .dark .card { @apply bg-gray-800 border-gray-700; }
-        .light .card { @apply bg-white border-gray-300; }
+        .light .card { @apply bg-white border-black-300; }
         .input-group { @apply mb-4; }
         /* Corrected input field styling as requested */
         .input-field { @apply w-full px-4 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-300 bg-white text-black font-bold; }
         .btn { @apply font-semibold py-2 px-4 rounded-full shadow-md transition-transform duration-200 active:scale-95; }
-        .btn-primary { @apply bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700; }
-        .btn-secondary { @apply bg-gray-600 text-white hover:bg-gray-700; }
-        .dark .btn-secondary { @apply bg-gray-600 text-white hover:bg-gray-700; }
-        .light .btn-secondary { @apply bg-gray-300 text-gray-800 hover:bg-gray-400; }
+        .btn-primary { @apply bg-gradient-to-r from-purple-500 to-indigo-600 text-black hover:from-purple-600 hover:to-indigo-700; }
+        .btn-secondary { @apply bg-gray-600 text-white hover:bg-black-700; }
+        .dark .btn-secondary { @apply bg-gray-600 text-white hover:bg-black-700; }
+        .light .btn-secondary { @apply bg-gray-300 text-black-800 hover:bg-black-400; }
         .prose-sm pre { @apply p-2 rounded-md whitespace-pre-wrap; }
-        .dark .prose-sm pre { @apply bg-gray-600 text-gray-100; }
-        .light .prose-sm pre { @apply bg-gray-200 text-gray-800; }
+        .dark .prose-sm pre { @apply bg-gray-600 text-black-100; }
+        .light .prose-sm pre { @apply bg-gray-200 text-black-800; }
         .report-section { @apply mt-6 border-t pt-4 border-gray-600 dark:border-gray-600 light:border-gray-300; }
         .api-link { @apply block w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-center rounded-lg shadow-lg transform transition-transform duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500; }
         .api-validation-btn { @apply w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg transform transition-transform duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500; }
